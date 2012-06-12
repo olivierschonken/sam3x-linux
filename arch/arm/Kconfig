@@ -182,8 +182,8 @@ config ARCH_MTD_XIP
 config VECTORS_BASE
 	hex
 	default 0xffff0000 if MMU || CPU_HIGH_VECTOR
-	default DRAM_BASE if REMAP_VECTORS_TO_RAM
-	default 0x00000000
+	default VECTOR_TABLE_BASE if REMAP_VECTORS_TO_RAM
+	default 0x20000000
 	help
 	  The base address of exception vectors.
 
@@ -243,6 +243,37 @@ config MMU
 	  Select if you want MMU-based virtualised addressing space
 	  support by paged memory management. If unsure, say 'Y'.
 
+config MPU
+	bool "Enable the memory protection unit (EXPERIMENTAL)"
+	depends on !MMU
+	default n
+	help
+	  Use the processor MPU to protect applications from accessing
+	  memory they do not own.  This comes at a performance penalty
+	  and is recommended only for debugging.
+	  Enable CONFIG_DEBUG_USER and pass user_debug=8 to the kernel
+	  to make the MPU handler print a verbose debug message on
+	  a process MPU fault.
+
+config MPU_STACK_REDZONE
+	bool "Enable stack protection (red zone) at the bottom of stack"
+	depends on MPU
+	default y
+	help
+	  Attempt to read/write from a user-space process the red zone
+          will result in a memory fault exception for the process.
+	  The red zone consumes up to 512 bytes of the lower stack
+	  (the red zone itlsef is 256 bytes + alignment).
+
+config MPU_USER_ACCESS
+	bool "Check validity of user region in copy_[to/from]_user"
+	depends on MPU
+	default y
+	help
+	  Ensure validity of the user region in copy_to_user, copy_from_user
+	  and friends. This ensures that the kernel doesn't allow
+	  accessing to a region unmapped for the current process from
+	  a system call.
 #
 # The "ARM system type" choice list is ordered alphabetically by option
 # text.  Please add new entries in the option alphabetic order.
@@ -1124,6 +1155,16 @@ config ARM_NR_BANKS
 	default 16 if ARCH_EP93XX
 	default 8
 
+config ARM_V7M_NO_UNALIGN_TRP
+	bool "Disable the Unaligned Access exception on ARMv7-M"
+	depends on CPU_V7M
+	default n
+	help
+	  Disable the 'Unaligned access' exception raised on an
+	  unaligned data access by default. This option may be
+	  useful to support running of application programs that
+	  do not respect data alignment.
+
 config IWMMXT
 	bool "Enable iWMMXt support"
 	depends on CPU_XSCALE || CPU_XSC3 || CPU_MOHAWK || CPU_PJ4
@@ -1599,7 +1640,7 @@ config HZ
 
 config THUMB2_KERNEL
 	bool "Compile the kernel in Thumb-2 mode (EXPERIMENTAL)"
-	depends on CPU_V7 && !CPU_V6 && !CPU_V6K && EXPERIMENTAL
+	depends on (CPU_V7 || CPU_V7M) && !CPU_V6 && !CPU_V6K && EXPERIMENTAL
 	select AEABI
 	select ARM_ASM_UNIFIED
 	select ARM_UNWIND
@@ -2252,7 +2293,7 @@ source "kernel/power/Kconfig"
 config ARCH_SUSPEND_POSSIBLE
 	depends on !ARCH_S5PC100 && !ARCH_TEGRA
 	depends on CPU_ARM920T || CPU_ARM926T || CPU_SA1100 || \
-		CPU_V6 || CPU_V6K || CPU_V7 || CPU_XSC3 || CPU_XSCALE || CPU_MOHAWK
+		CPU_V6 || CPU_V6K || CPU_V7 || CPU_V7M || CPU_XSC3 || CPU_XSCALE || CPU_MOHAWK
 	def_bool y
 
 config ARM_CPU_SUSPEND

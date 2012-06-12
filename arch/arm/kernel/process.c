@@ -332,12 +332,14 @@ void __show_regs(struct pt_regs *regs)
 #endif
 }
 
+#include <asm/unwind.h>
+
 void show_regs(struct pt_regs * regs)
 {
 	printk("\n");
 	printk("Pid: %d, comm: %20s\n", task_pid_nr(current), current->comm);
 	__show_regs(regs);
-	dump_stack();
+	unwind_backtrace(regs, current);
 }
 
 ATOMIC_NOTIFIER_HEAD(thread_notify_head);
@@ -434,7 +436,11 @@ asm(	".pushsection .text\n"
 #ifdef CONFIG_TRACE_IRQFLAGS
 "	bl	trace_hardirqs_on\n"
 #endif
+#ifdef CONFIG_CPU_V7M
+"	msr	primask, r7\n"
+#else
 "	msr	cpsr_c, r7\n"
+#endif
 "	mov	r0, r4\n"
 "	mov	lr, r6\n"
 "	mov	pc, r5\n"
@@ -473,6 +479,10 @@ pid_t kernel_thread(int (*fn)(void *), void *arg, unsigned long flags)
 	regs.ARM_r7 = SVC_MODE | PSR_ENDSTATE | PSR_ISETSTATE;
 	regs.ARM_pc = (unsigned long)kernel_thread_helper;
 	regs.ARM_cpsr = regs.ARM_r7 | PSR_I_BIT;
+#if defined CONFIG_CPU_V7M
+	/* Return to Handler mode */
+	regs.ARM_EXC_RET = 0xfffffff1L;
+#endif
 
 	return do_fork(flags|CLONE_VM|CLONE_UNTRACED, 0, &regs, 0, NULL, NULL);
 }

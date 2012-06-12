@@ -23,6 +23,7 @@
 
 #if defined(CONFIG_CPU_V6) || defined(CONFIG_CPU_V6K) || defined(CONFIG_CPU_V7)
 		.macro	loadsp, rb, tmp
+		.macro	loadsp, rb, tmp
 		.endm
 		.macro	writeb, ch, rb
 		mcr	p14, 0, \ch, c0, c5, 0
@@ -39,9 +40,9 @@
 		.macro	writeb, ch, rb
 		mcr	p14, 0, \ch, c1, c0, 0
 		.endm
-#endif
+#endif  /*#CONFIG_CPU_*/
 
-#else
+#else /*#CONFIG_DEBUG_ICEDCC*/
 
 #include <mach/debug-macro.S>
 
@@ -56,7 +57,7 @@
 		add	\rb, \rb, #0x00050000	@ Ser3
 #else
 		add	\rb, \rb, #0x00010000	@ Ser1
-#endif
+#endif /*#CONFIG_DEBUG_LL_SER3*/
 		.endm
 #elif defined(CONFIG_ARCH_S3C24XX)
 		.macro loadsp, rb, tmp
@@ -67,9 +68,9 @@
 		.macro	loadsp,	rb, tmp
 		addruart \rb, \tmp
 		.endm
-#endif
-#endif
-#endif
+#endif /*#CONFIG_ARCH_SA1100*/
+#endif /*#CONFIG_DEBUG_ICEDCC*/
+#endif /*#DEBUG*/
 
 		.macro	kputc,val
 		mov	r0, \val
@@ -92,7 +93,7 @@
 		kputc	#':'
 		mrc	p15, 0, r0, c1, c0
 		kphex	r0, 8		/* control reg */
-#endif
+#endif /*#CONFIG_CPU_CP15*/
 		kputc	#'\n'
 		kphex	r5, 8		/* decompressed kernel start */
 		kputc	#'-'
@@ -100,7 +101,7 @@
 		kputc	#'>'
 		kphex	r4, 8		/* kernel execution address */
 		kputc	#'\n'
-#endif
+#endif /*#DEBUG*/
 		.endm
 
 		.macro	debug_reloc_end
@@ -109,7 +110,7 @@
 		kputc	#'\n'
 		mov	r0, r4
 		bl	memdump		/* dump 256 bytes at start of kernel */
-#endif
+#endif /*#DEBUG*/
 		.endm
 
 		.section ".start", #alloc, #execinstr
@@ -117,14 +118,20 @@
  * sort out different calling conventions
  */
 		.align
+#if defined (CONFIG_CPU_V7M)
+		.thumb				@ Enter in Thumb state
+#else
 		.arm				@ Always enter in ARM state
+#endif
 start:
 		.type	start,#function
 		.rept	7
 		mov	r0, r0
 		.endr
+#if !defined (CONFIG_CPU_V7M)
    ARM(		mov	r0, r0		)
    ARM(		b	1f		)
+#endif
  THUMB(		adr	r12, BSYM(1f)	)
  THUMB(		bx	r12		)
 
@@ -135,6 +142,7 @@ start:
 1:		mov	r7, r1			@ save architecture ID
 		mov	r8, r2			@ save atags pointer
 
+#ifndef CONFIG_CPU_V7M
 #ifndef __ARM_ARCH_2__
 		/*
 		 * Booting from Angel - need to enter SVC mode and disable
@@ -154,7 +162,7 @@ not_angel:
 #else
 		teqp	pc, #0x0c000003		@ turn off interrupts
 #endif
-
+#endif
 		/*
 		 * Note that some cache flushing and other stuff may
 		 * be needed here - is there an Angel SWI call for this?
@@ -720,6 +728,9 @@ __common_mmu_cache_on:
 call_cache_fn:	adr	r12, proc_types
 #ifdef CONFIG_CPU_CP15
 		mrc	p15, 0, r9, c0, c0	@ get processor ID
+#elif defined(CONFIG_CPU_V7M)
+		ldr	r6, =0xe000ed00		@ CPUID register address
+		ldr	r6, [r6]
 #else
 		ldr	r9, =CONFIG_PROCESSOR_ID
 #endif
@@ -875,11 +886,13 @@ proc_types:
 		W(b)	__armv4_mmu_cache_off
 		W(b)	__armv6_mmu_cache_flush
 
+#ifndef CONFIG_CPU_V7M
 		.word	0x000f0000		@ new CPU Id
 		.word	0x000f0000
 		W(b)	__armv7_mmu_cache_on
 		W(b)	__armv7_mmu_cache_off
 		W(b)	__armv7_mmu_cache_flush
+#endif
 
 		.word	0			@ unrecognised type
 		.word	0

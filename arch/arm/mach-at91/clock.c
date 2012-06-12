@@ -46,6 +46,7 @@ EXPORT_SYMBOL_GPL(at91_pmc_base);
 #define clk_is_primary(x)	((x)->type & CLK_TYPE_PRIMARY)
 #define clk_is_programmable(x)	((x)->type & CLK_TYPE_PROGRAMMABLE)
 #define clk_is_peripheral(x)	((x)->type & CLK_TYPE_PERIPHERAL)
+#define clk_is_peripheral2(x)	((x)->type & CLK_TYPE_PERIPHERAL2)
 #define clk_is_sys(x)		((x)->type & CLK_TYPE_SYSTEM)
 
 
@@ -54,6 +55,7 @@ EXPORT_SYMBOL_GPL(at91_pmc_base);
  */
 #define cpu_has_utmi()		(  cpu_is_at91sam9rl() \
 				|| cpu_is_at91sam9g45() \
+				|| cpu_is_at91sam3x8h() \
 				|| cpu_is_at91sam9x5())
 
 #define cpu_has_800M_plla()	(  cpu_is_at91sam9g20() \
@@ -88,7 +90,8 @@ EXPORT_SYMBOL_GPL(at91_pmc_base);
 				|| cpu_is_at91sam9n12())
 
 #define cpu_has_alt_prescaler()	(cpu_is_at91sam9x5() \
-				|| cpu_is_at91sam9n12())
+				|| cpu_is_at91sam9n12() \
+				|| cpu_is_at91sam3x8h())
 
 static LIST_HEAD(clocks);
 static DEFINE_SPINLOCK(clk_lock);
@@ -205,9 +208,24 @@ struct clk mck = {
 static void pmc_periph_mode(struct clk *clk, int is_on)
 {
 	if (is_on)
-		at91_pmc_write(AT91_PMC_PCER, clk->pmc_mask);
+	{
+		if (clk_is_peripheral(clk)) {
+			at91_pmc_write(AT91_PMC_PCER, clk->pmc_mask);
+		}
+		if (clk_is_peripheral2(clk)) {
+			at91_pmc_write(AT91_PMC_PCER1, clk->pmc_mask);
+		}
+
+	}
 	else
-		at91_pmc_write(AT91_PMC_PCDR, clk->pmc_mask);
+	{
+		if (clk_is_peripheral(clk)) {
+			at91_pmc_write(AT91_PMC_PCDR, clk->pmc_mask);
+		}
+		if (clk_is_peripheral2(clk)) {
+			at91_pmc_write(AT91_PMC_PCDR1, clk->pmc_mask);
+		}
+	}
 }
 
 static struct clk __init *at91_css_to_clk(unsigned long css)
@@ -768,6 +786,8 @@ static int __init at91_pmc_init(unsigned long main_clock)
 	} else if (cpu_has_mdiv3()) {
 		mck.rate_hz = (mckr & AT91_PMC_MDIV) == AT91SAM9_PMC_MDIV_3 ?
 			freq / 3 : freq / (1 << ((mckr & AT91_PMC_MDIV) >> 8));	/* mdiv */
+	} else if (cpu_is_at91sam3x8h()) {
+		mck.rate_hz = freq;
 	} else {
 		mck.rate_hz = freq / (1 << ((mckr & AT91_PMC_MDIV) >> 8));		/* mdiv */
 	}
@@ -850,7 +870,6 @@ int __init at91_clock_init(unsigned long main_clock)
 	at91_pmc_base = ioremap(AT91_PMC, 256);
 	if (!at91_pmc_base)
 		panic("Impossible to ioremap AT91_PMC 0x%x\n", AT91_PMC);
-
 	return at91_pmc_init(main_clock);
 }
 
@@ -861,24 +880,33 @@ static int __init at91_clock_reset(void)
 {
 	unsigned long pcdr = 0;
 	unsigned long scdr = 0;
-	struct clk *clk;
+	unsigned long pcdr1 = 0;
 
+	struct clk *clk;
 	list_for_each_entry(clk, &clocks, node) {
 		if (clk->users > 0)
 			continue;
-
 		if (clk->mode == pmc_periph_mode)
-			pcdr |= clk->pmc_mask;
+		{
+			if (clk_is_peripheral(clk)) {
+				pcdr |= clk->pmc_mask;
+			}
+			if (clk_is_peripheral2(clk)) {
+				pcdr1 |= clk->pmc_mask;
+			}
+
+		}
 
 		if (clk->mode == pmc_sys_mode)
+		{
 			scdr |= clk->pmc_mask;
+		}
 
 		pr_debug("Clocks: disable unused %s\n", clk->name);
 	}
-
 	at91_pmc_write(AT91_PMC_PCDR, pcdr);
-	at91_pmc_write(AT91_PMC_SCDR, scdr);
-
+	at91_pmc_write(AT91_PMC_PCDR1, pcdr1);
+	//at91_pmc_write(AT91_PMC_SCDR, scdr);  /*TODO: Causes crash, not sure why....*/
 	return 0;
 }
 late_initcall(at91_clock_reset);

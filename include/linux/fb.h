@@ -691,6 +691,12 @@ struct fb_ops {
 	/* perform fb specific mmap */
 	int (*fb_mmap)(struct fb_info *info, struct vm_area_struct *vma);
 
+	/* support for nommu mmappings */
+	unsigned long (*fb_get_unmapped_area)(struct fb_info *info, struct file *file,
+				unsigned long addr, unsigned long len, unsigned long pgoff, unsigned long flags);
+
+	/*flush buffer to screen - for EBI screen*/
+	int (*fb_write_flush)(struct fb_info *info);
 	/* get capability given var */
 	void (*fb_get_caps)(struct fb_info *info, struct fb_blit_caps *caps,
 			    struct fb_var_screeninfo *var);

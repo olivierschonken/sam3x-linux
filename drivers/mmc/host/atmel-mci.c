@@ -2095,7 +2095,6 @@ static int __init atmci_init_slot(struct atmel_mci *host,
 
 		setup_timer(&slot->detect_timer, atmci_detect_change,
 				(unsigned long)slot);
-
 		ret = request_irq(gpio_to_irq(slot->detect_pin),
 				atmci_detect_interrupt,
 				IRQF_TRIGGER_FALLING | IRQF_TRIGGER_RISING,

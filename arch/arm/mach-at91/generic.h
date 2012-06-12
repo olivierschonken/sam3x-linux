@@ -37,6 +37,7 @@ extern void at91rm9200_ioremap_st(u32 addr);
 extern struct sys_timer at91rm9200_timer;
 extern void at91sam926x_ioremap_pit(u32 addr);
 extern struct sys_timer at91sam926x_timer;
+extern struct sys_timer at91sam3x_timer;
 extern struct sys_timer at91x40_timer;
 
  /* Clocks */

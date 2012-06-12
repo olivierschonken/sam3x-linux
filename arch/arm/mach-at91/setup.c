@@ -19,7 +19,7 @@
 #include <mach/at91_dbgu.h>
 #include <mach/at91_pmc.h>
 #include <mach/at91_shdwc.h>
-
+#include <asm/hardware/nvic.h>
 #include "soc.h"
 #include "generic.h"
 
@@ -41,14 +41,22 @@ void __init at91rm9200_set_type(int type)
 
 void __init at91_init_irq_default(void)
 {
+#if !defined(CONFIG_ARCH_AT91SAM3X8H)
 	at91_init_interrupts(at91_boot_soc.default_irq_priority);
+#else
+	at91_init_interrupts(0);
+#endif
 }
+
 
 void __init at91_init_interrupts(unsigned int *priority)
 {
+#if !defined(CONFIG_ARCH_AT91SAM3X8H)
 	/* Initialize the AIC interrupt controller */
 	at91_aic_init(priority);
-
+#else
+	nvic_init();
+#endif
 	/* Enable GPIO interrupts */
 	at91_gpio_irq_setup();
 }
@@ -72,12 +80,16 @@ static struct map_desc sram_desc[2] __initdata;
 void __init at91_init_sram(int bank, unsigned long base, unsigned int length)
 {
 	struct map_desc *desc = &sram_desc[bank];
-
+#if !defined(CONFIG_ARCH_AT91SAM3X8H)
 	desc->virtual = AT91_IO_VIRT_BASE - length;
 	if (bank > 0)
 		desc->virtual -= sram_desc[bank - 1].length;
 
 	desc->pfn = __phys_to_pfn(base);
+#else
+	desc->virtual = base;
+	desc->pfn = __phys_to_pfn(base);
+#endif
 	desc->length = length;
 	desc->type = MT_DEVICE;
 
@@ -97,8 +109,11 @@ static struct map_desc at91_io_desc __initdata = {
 static void __init soc_detect(u32 dbgu_base)
 {
 	u32 cidr, socid;
-
+#if !defined(CONFIG_ARCH_AT91SAM3X8H)
 	cidr = __raw_readl(AT91_IO_P2V(dbgu_base) + AT91_DBGU_CIDR);
+#else
+	cidr = __raw_readl(dbgu_base + AT91_DBGU_CIDR);
+#endif
 	socid = cidr & ~AT91_CIDR_VERSION;
 
 	switch (socid) {
@@ -148,6 +163,11 @@ static void __init soc_detect(u32 dbgu_base)
 		at91_soc_initdata.type = AT91_SOC_SAM9N12;
 		at91_boot_soc = at91sam9n12_soc;
 		break;
+
+	case ARCH_ID_AT91SAM3X8:
+		at91_soc_initdata.type = AT91_SOC_SAM3X8H;
+		at91_boot_soc = at91sam3x8h_soc;
+		break;
 	}
 
 	/* at91sam9g10 */
@@ -168,8 +188,11 @@ static void __init soc_detect(u32 dbgu_base)
 	at91_soc_initdata.cidr = cidr;
 
 	/* sub version of soc */
+#if !defined(CONFIG_ARCH_AT91SAM3X8H)
 	at91_soc_initdata.exid = __raw_readl(AT91_IO_P2V(dbgu_base) + AT91_DBGU_EXID);
-
+#else
+	at91_soc_initdata.exid = __raw_readl(dbgu_base + AT91_DBGU_EXID);
+#endif
 	if (at91_soc_initdata.type == AT91_SOC_SAM9G45) {
 		switch (at91_soc_initdata.exid) {
 		case ARCH_EXID_AT91SAM9M10:
@@ -216,6 +239,7 @@ static const char *soc_name[] = {
 	[AT91_SOC_SAM9RL]	= "at91sam9rl",
 	[AT91_SOC_SAM9X5]	= "at91sam9x5",
 	[AT91_SOC_SAM9N12]	= "at91sam9n12",
+	[AT91_SOC_SAM3X8H]	= "at91sam3x8h",
 	[AT91_SOC_NONE]		= "Unknown"
 };
 
@@ -310,8 +334,10 @@ void __init at91_ioremap_matrix(u32 base_addr)
 
 #if defined(CONFIG_OF)
 static struct of_device_id rstc_ids[] = {
+#if !defined(CONFIG_ARCH_AT91SAM3X8H)
 	{ .compatible = "atmel,at91sam9260-rstc", .data = at91sam9_alt_restart },
 	{ .compatible = "atmel,at91sam9g45-rstc", .data = at91sam9g45_restart },
+#endif
 	{ /*sentinel*/ }
 };
 
@@ -454,8 +480,9 @@ void __init at91_dt_initialize(void)
 
 void __init at91_initialize(unsigned long main_clock)
 {
+	//early_printk("at91_initialize\n");
 	at91_boot_soc.ioremap_registers();
-
+	//early_printk("io_remap\n");
 	/* Init clock subsystem */
 	at91_clock_init(main_clock);
 

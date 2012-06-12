@@ -20,7 +20,11 @@ void __cpu_suspend_save(u32 *ptr, u32 ptrsz, u32 sp, u32 *save_ptr)
 	*save_ptr = virt_to_phys(ptr);
 
 	/* This must correspond to the LDM in cpu_resume() assembly */
+#ifdef CONFIG_MMU
 	*ptr++ = virt_to_phys(idmap_pgd);
+#else
+	*ptr++ = 0;
+#endif
 	*ptr++ = sp;
 	*ptr++ = virt_to_phys(cpu_do_resume);
 
@@ -38,11 +42,13 @@ void __cpu_suspend_save(u32 *ptr, u32 ptrsz, u32 sp, u32 *save_ptr)
  */
 int cpu_suspend(unsigned long arg, int (*fn)(unsigned long))
 {
-	struct mm_struct *mm = current->active_mm;
 	int ret;
+#ifdef CONFIG_MMU
+	struct mm_struct *mm = current->active_mm;
 
 	if (!idmap_pgd)
 		return -EINVAL;
+#endif
 
 	/*
 	 * Provide a temporary page table with an identity mapping for
@@ -51,10 +57,12 @@ int cpu_suspend(unsigned long arg, int (*fn)(unsigned long))
 	 * back to the correct page tables.
 	 */
 	ret = __cpu_suspend(arg, fn);
+#ifdef CONFIG_MMU
 	if (ret == 0) {
 		cpu_switch_mm(mm->pgd, mm);
 		local_flush_tlb_all();
 	}
+#endif
 
 	return ret;
 }

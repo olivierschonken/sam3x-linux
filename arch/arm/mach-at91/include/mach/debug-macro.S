@@ -13,13 +13,12 @@
 
 #include <mach/hardware.h>
 #include <mach/at91_dbgu.h>
-
 #if defined(CONFIG_AT91_DEBUG_LL_DBGU0)
 #define AT91_DBGU AT91_BASE_DBGU0
 #else
 #define AT91_DBGU AT91_BASE_DBGU1
 #endif
-
+#if !defined(CONFIG_ARCH_AT91SAM3X8H)
 	.macro	addruart, rp, rv, tmp
 	ldr	\rp, =AT91_DBGU				@ System peripherals (phys address)
 	ldr	\rv, =AT91_IO_P2V(AT91_DBGU)		@ System peripherals (virt address)
@@ -40,4 +39,24 @@
 	tst	\rd, #AT91_DBGU_TXEMPTY			@ DBGU_TXEMPTY = 1 when transmission complete
 	beq	1001b
 	.endm
+#else
+	.macro	addruart, rp, rv, tmp
+	ldr	\rp, =AT91_DBGU				@ System peripherals (phys address)
+	.endm
 
+	.macro	senduart,rd,rx
+	strb	\rd, [\rx, #(AT91_DBGU_THR)]	@ Write to Transmitter Holding Register
+	.endm
+
+	.macro	waituart,rd,rx
+1002:	ldr	\rd, [\rx, #(AT91_DBGU_SR)]		@ Read Status Register
+	tst	\rd, #AT91_DBGU_TXRDY				@ DBGU_TXRDY = 1 when ready to transmit
+	beq	1002b
+	.endm
+
+	.macro	busyuart,rd,rx
+1001:	ldr	\rd, [\rx, #(AT91_DBGU_SR)]		@ Read Status Register
+	tst	\rd, #AT91_DBGU_TXEMPTY				@ DBGU_TXEMPTY = 1 when transmission complete
+	beq	1001b
+	.endm
+#endif

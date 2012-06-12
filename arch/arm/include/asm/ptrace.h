@@ -39,16 +39,25 @@
 #define FIQ26_MODE	0x00000001
 #define IRQ26_MODE	0x00000002
 #define SVC26_MODE	0x00000003
+#ifndef CONFIG_CPU_V7M
 #define USR_MODE	0x00000010
+#define SVC_MODE	0x00000013
+#else
+#define USR_MODE	0x00000000
+#define SVC_MODE	0x00000000
+#endif
 #define FIQ_MODE	0x00000011
 #define IRQ_MODE	0x00000012
-#define SVC_MODE	0x00000013
 #define ABT_MODE	0x00000017
 #define UND_MODE	0x0000001b
 #define SYSTEM_MODE	0x0000001f
 #define MODE32_BIT	0x00000010
 #define MODE_MASK	0x0000001f
+#ifndef CONFIG_CPU_V7M
 #define PSR_T_BIT	0x00000020
+#else
+#define PSR_T_BIT	0x01000000
+#endif
 #define PSR_F_BIT	0x00000040
 #define PSR_I_BIT	0x00000080
 #define PSR_A_BIT	0x00000100
@@ -106,7 +115,11 @@ struct pt_regs {
 };
 #else /* __KERNEL__ */
 struct pt_regs {
+#ifdef CONFIG_CPU_V7M
+	unsigned long uregs[20];
+#else
 	unsigned long uregs[18];
+#endif
 };
 #endif /* __KERNEL__ */
 
@@ -128,6 +141,7 @@ struct pt_regs {
 #define ARM_r1		uregs[1]
 #define ARM_r0		uregs[0]
 #define ARM_ORIG_r0	uregs[17]
+#define ARM_EXC_RET	uregs[18]
 
 /*
  * The size of the user-visible VFP state as seen by PTRACE_GET/SETVFPREGS
@@ -165,6 +179,7 @@ struct pt_regs {
  */
 static inline int valid_user_regs(struct pt_regs *regs)
 {
+#ifndef CONFIG_CPU_V7M
 	unsigned long mode = regs->ARM_cpsr & MODE_MASK;
 
 	/*
@@ -187,6 +202,9 @@ static inline int valid_user_regs(struct pt_regs *regs)
 		regs->ARM_cpsr |= USR_MODE;
 
 	return 0;
+#else /* ifndef CONFIG_CPU_V7M */
+	return 1;
+#endif
 }
 
 static inline long regs_return_value(struct pt_regs *regs)

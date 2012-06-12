@@ -13,6 +13,7 @@
 #define CLK_TYPE_PROGRAMMABLE	0x4
 #define CLK_TYPE_PERIPHERAL	0x8
 #define CLK_TYPE_SYSTEM		0x10
+#define CLK_TYPE_PERIPHERAL2 0x12
 
 
 struct clk {

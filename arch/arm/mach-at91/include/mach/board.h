@@ -103,7 +103,7 @@ extern void __init at91_add_device_usbh_ehci(struct at91_usbh_data *data);
 extern void __init at91_add_device_nand(struct atmel_nand_data *data);
 
  /* I2C*/
-#if defined(CONFIG_ARCH_AT91SAM9G45)
+#if defined(CONFIG_ARCH_AT91SAM9G45) || defined(CONFIG_ARCH_AT91SAM3X8H)
 extern void __init at91_add_device_i2c(short i2c_id, struct i2c_board_info *devices, int nr_devices);
 #else
 extern void __init at91_add_device_i2c(struct i2c_board_info *devices, int nr_devices);
@@ -163,6 +163,10 @@ extern void __init at91_add_device_ssc(unsigned id, unsigned pins);
  /* LCD Controller */
 struct atmel_lcdfb_info;
 extern void __init at91_add_device_lcdc(struct atmel_lcdfb_info *data);
+
+/* LCD Controller */
+struct hx8347_device_data;
+extern void __init add_device_hx8347(struct hx8347_device_data *data);
 
  /* AC97 */
 extern void __init at91_add_device_ac97(struct ac97c_platform_data *data);

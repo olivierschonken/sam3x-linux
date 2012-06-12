@@ -15,6 +15,12 @@
 #ifndef AT91_TC_H
 #define AT91_TC_H
 
+#define at91_tc_read(field) \
+	__raw_readl(AT91_TC + field)
+
+#define at91_tc_write(field, value) \
+	__raw_writel(value, AT91_TC + field);
+
 #define AT91_TC_BCR		0xc0		/* TC Block Control Register */
 #define		AT91_TC_SYNC		(1 << 0)	/* Synchro Command */
 

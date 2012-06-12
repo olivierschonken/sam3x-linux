@@ -10,6 +10,18 @@
  */
 #if __LINUX_ARM_ARCH__ >= 6
 
+#ifdef CONFIG_CPU_V7M
+static inline unsigned long arch_local_irq_save(void)
+{
+	unsigned long flags;
+
+	asm volatile(
+		"	mrs	%0, primask	@ arch_local_irq_save\n"
+		"	cpsid	i"
+		: "=r" (flags) : : "memory", "cc");
+	return flags;
+}
+#else
 static inline unsigned long arch_local_irq_save(void)
 {
 	unsigned long flags;
@@ -20,6 +32,7 @@ static inline unsigned long arch_local_irq_save(void)
 		: "=r" (flags) : : "memory", "cc");
 	return flags;
 }
+#endif
 
 static inline void arch_local_irq_enable(void)
 {
@@ -122,6 +135,38 @@ static inline void arch_local_irq_disable(void)
 
 #endif
 
+#ifdef CONFIG_CPU_V7M
+/*
+ * Save the current interrupt enable state.
+ */
+static inline unsigned long arch_local_save_flags(void)
+{
+	unsigned long flags;
+	asm volatile(
+		"	mrs	%0, primask	@ local_save_flags"
+		: "=r" (flags) : : "memory", "cc");
+	return flags;
+}
+
+/*
+ * restore saved IRQ & FIQ state
+ */
+static inline void arch_local_irq_restore(unsigned long flags)
+{
+	asm volatile(
+		"	msr	primask, %0	@ local_irq_restore"
+		:
+		: "r" (flags)
+		: "memory", "cc");
+}
+
+static inline int arch_irqs_disabled_flags(unsigned long flags)
+{
+	return flags & 1;
+}
+
+#else /* ifdef CONFIG_CPU_V7M */
+
 /*
  * Save the current interrupt enable state.
  */
@@ -151,5 +196,7 @@ static inline int arch_irqs_disabled_flags(unsigned long flags)
 	return flags & PSR_I_BIT;
 }
 
-#endif
-#endif
+#endif /* ifdef CONFIG_CPU_V7M / else */
+
+#endif /* ifdef __KERNEL__ */
+#endif /* ifndef __ASM_ARM_IRQFLAGS_H */
