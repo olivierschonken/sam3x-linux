@@ -48,7 +48,7 @@
 #include "atmel_ssc_dai.h"
 
 
-#if defined(CONFIG_ARCH_AT91SAM9260) || defined(CONFIG_ARCH_AT91SAM9G20)
+#if defined(CONFIG_ARCH_AT91SAM9260) || defined(CONFIG_ARCH_AT91SAM9G20) || defined(CONFIG_ARCH_AT91SAM3X8H)
 #define NUM_SSC_DEVICES		1
 #else
 #define NUM_SSC_DEVICES		3

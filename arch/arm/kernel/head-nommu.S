@@ -32,28 +32,32 @@
  * numbers for r1.
  *
  */
-	.arm
+
+	@.arm
 
 	__HEAD
 ENTRY(stext)
 
- THUMB(	adr	r9, BSYM(1f)	)	@ Kernel is always entered in ARM.
- THUMB(	bx	r9		)	@ If this is a Thumb-2 kernel,
+ @THUMB(	adr	r9, BSYM(1f)	)	@ Kernel is always entered in ARM.
+ @THUMB(	bx	r9		)	@ If this is a Thumb-2 kernel,
  THUMB(	.thumb			)	@ switch to Thumb now.
  THUMB(1:			)
 
 	setmode	PSR_F_BIT | PSR_I_BIT | SVC_MODE, r9 @ ensure svc mode
 						@ and irqs disabled
-#ifndef CONFIG_CPU_CP15
-	ldr	r9, =CONFIG_PROCESSOR_ID
-#else
+#if defined(CONFIG_CPU_CP15)
 	mrc	p15, 0, r9, c0, c0		@ get processor id
+#elif defined(CONFIG_CPU_V7M)
+	ldr	r9, =0xe000ed00			@ CPUID register address
+	ldr	r9, [r9]
+#else
+	ldr	r9, =CONFIG_PROCESSOR_ID
 #endif
 	bl	__lookup_processor_type		@ r5=procinfo r9=cpuid
 	movs	r10, r5				@ invalid processor (r5=0)?
+	THUMB( it	eq )		@ force fixup-able long branch encoding
 	beq	__error_p				@ yes, error 'p'
-
-	adr	lr, BSYM(__after_proc_init)	@ return (PIC) address
+		adr	lr, BSYM(__after_proc_init)	@ return (PIC) address
  ARM(	add	pc, r10, #PROCINFO_INITFUNC	)
  THUMB(	add	r12, r10, #PROCINFO_INITFUNC	)
  THUMB(	mov	pc, r12				)

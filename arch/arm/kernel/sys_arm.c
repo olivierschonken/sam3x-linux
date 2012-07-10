@@ -102,6 +102,7 @@ int kernel_execve(const char *filename,
 	 * We were successful.  We won't be returning to our caller, but
 	 * instead to user space by manipulating the kernel stack.
 	 */
+	//pr_info("we were successful\n");
 	asm(	"add	r0, %0, %1\n\t"
 		"mov	r1, %2\n\t"
 		"mov	r2, %3\n\t"

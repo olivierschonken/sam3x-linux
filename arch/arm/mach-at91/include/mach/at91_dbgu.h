@@ -32,10 +32,15 @@
 #define AT91_DBGU_THR		(0x1c)	/* Transmitter Holding Register */
 #define AT91_DBGU_BRGR		(0x20)	/* Baud Rate Generator Register */
 
-#define AT91_DBGU_CIDR		(0x40)	/* Chip ID Register */
-#define AT91_DBGU_EXID		(0x44)	/* Chip ID Extension Register */
-#define AT91_DBGU_FNR		(0x48)	/* Force NTRST Register [SAM9 only] */
-#define		AT91_DBGU_FNTRST	(1 << 0)		/* Force NTRST */
+#if !defined(CONFIG_ARCH_AT91SAM3X8H)
+	#define AT91_DBGU_CIDR		(0x40)	/* Chip ID Register */
+	#define AT91_DBGU_EXID		(0x44)	/* Chip ID Extension Register */
+	#define AT91_DBGU_FNR		(0x48)	/* Force NTRST Register [SAM9 only] */
+	#define		AT91_DBGU_FNTRST	(1 << 0)		/* Force NTRST */
+#else
+	#define AT91_DBGU_CIDR		(0x140)	/* Chip ID Register */
+	#define AT91_DBGU_EXID		(0x144)	/* Chip ID Extension Register */
+#endif
 
 #endif /* AT91_DBGU */
 

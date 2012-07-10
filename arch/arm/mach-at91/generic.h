@@ -30,13 +30,14 @@ extern void __init at91_aic_init(unsigned int priority[]);
 extern int  __init at91_aic_of_init(struct device_node *node,
 				    struct device_node *parent);
 
-
+extern void __init at91sam3x8h_set_console_clock(int id);
  /* Timer */
 struct sys_timer;
 extern void at91rm9200_ioremap_st(u32 addr);
 extern struct sys_timer at91rm9200_timer;
 extern void at91sam926x_ioremap_pit(u32 addr);
 extern struct sys_timer at91sam926x_timer;
+extern struct sys_timer at91sam3x_timer;
 extern struct sys_timer at91x40_timer;
 
  /* Clocks */

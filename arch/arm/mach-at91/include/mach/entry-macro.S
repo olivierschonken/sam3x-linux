@@ -9,7 +9,7 @@
  * License version 2. This program is licensed "as is" without any
  * warranty of any kind, whether express or implied.
  */
-
+#if !defined(CONFIG_ARCH_AT91SAM3X8H)
 #include <mach/hardware.h>
 #include <mach/at91_aic.h>
 
@@ -24,4 +24,8 @@
 	teq	\irqstat, #0				@ ISR is 0 when no current interrupt, or spurious interrupt
 	streq	\tmp, [\base, #AT91_AIC_EOICR]		@ not going to be handled further, then ACK it now.
 	.endm
-
+#else
+#include <asm/hardware/gic.h>
+	.macro	arch_ret_to_user, tmp1, tmp2
+	.endm
+#endif

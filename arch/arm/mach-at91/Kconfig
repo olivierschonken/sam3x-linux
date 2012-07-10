@@ -11,16 +11,25 @@ config HAVE_AT91_DBGU1
 
 config AT91_SAM9_ALT_RESET
 	bool
-	default !ARCH_AT91X40
+	default !ARCH_AT91X40 && !ARCH_AT91SAM3X8H
 
 config AT91_SAM9G45_RESET
 	bool
-	default !ARCH_AT91X40
+	default !ARCH_AT91X40 && !ARCH_AT91SAM3X8H
 
 config SOC_AT91SAM9
 	bool
 	select GENERIC_CLOCKEVENTS
 	select CPU_ARM926T
+	
+config SOC_AT91SAM3X
+	bool
+  	select ARM_CORTEXM3
+	select CPU_V7M
+	select ARM_NVIC
+	select GENERIC_CLOCKEVENTS
+	select CONFIG_COMMON_CLKDEV
+	
 
 menu "Atmel AT91 System-on-Chip"
 
@@ -98,7 +107,15 @@ config SOC_AT91SAM9N12
 	select HAVE_FB_ATMEL
 	help
 	  Select this if you are using Atmel's AT91SAM9N12 SoC.
-
+	  
+config SOC_AT91SAM3X
+bool "AT91SAM3X family"
+	select SOC_AT91SAM3
+	select HAVE_NET_MACB
+	select HAVE_AT91_DBGU0
+	help
+	  Select this if you are using Atmel's AT91SAM3X SoC.
+	  
 choice
 	prompt "Atmel AT91 Processor Devices for non DT boards"
 
@@ -136,6 +153,10 @@ config ARCH_AT91SAM9G20
 config ARCH_AT91SAM9G45
 	bool "AT91SAM9G45"
 	select SOC_AT91SAM9G45
+
+config ARCH_AT91SAM3X8H
+	bool "AT91SAM3X family"
+	select SOC_AT91SAM3X
 
 config ARCH_AT91X40
 	bool "AT91x40"
@@ -337,6 +358,18 @@ config MACH_AT91SAM9G10EK
 
 endif
 
+# ----------------------------------------------------------
+
+if ARCH_AT91SAM3X8H
+
+comment "AT91SAM3X8H Board Type"
+
+config MACH_AT91SAM3X8HEK
+	bool "Atmel AT91SAM3X8-EK Evaluation Kit"
+	help
+	  Select this if you are using Atmel's AT91SAM3X8H-EK Evaluation Kit.
+
+endif
 # ----------------------------------------------------------
 
 if ARCH_AT91SAM9263

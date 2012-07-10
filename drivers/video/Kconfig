@@ -1011,6 +1011,15 @@ config FB_ATMEL
 	help
 	  This enables support for the AT91/AT32 LCD Controller.
 
+config FB_HX8347
+	tristate "HX8347 LCD Controller support"
+	depends on FB
+	select FB_CFB_FILLRECT
+	select FB_CFB_COPYAREA
+	select FB_CFB_IMAGEBLIT
+	help
+	  This enables support for the HX8347 LCD Controller.
+
 config FB_INTSRAM
 	bool "Frame Buffer in internal SRAM"
 	depends on FB_ATMEL && ARCH_AT91SAM9261

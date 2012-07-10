@@ -21,6 +21,7 @@ extern struct at91_init_soc at91sam9g45_soc;
 extern struct at91_init_soc at91sam9rl_soc;
 extern struct at91_init_soc at91sam9x5_soc;
 extern struct at91_init_soc at91sam9n12_soc;
+extern struct at91_init_soc at91sam3x8h_soc;
 
 static inline int at91_soc_is_enabled(void)
 {
@@ -57,4 +58,8 @@ static inline int at91_soc_is_enabled(void)
 
 #if !defined(CONFIG_SOC_AT91SAM9N12)
 #define at91sam9n12_soc	at91_boot_soc
+#endif
+
+#if !defined(CONFIG_ARCH_AT91SAM3X8H)
+#define at91sam3x8h_soc	at91_boot_soc
 #endif

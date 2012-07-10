@@ -344,16 +344,27 @@ static int __devinit at91_rtc_probe(struct platform_device *pdev)
 		goto fail_register;
 	}
 
+#if defined(CONFIG_ARCH_AT91SAM3X8H)
+	ret = request_irq(AT91SAM3X_INT_RTT, at91_rtc_interrupt,
+				IRQF_DISABLED,
+				dev_name(&rtc->rtcdev->dev), rtc);
+	if (ret) {
+		dev_dbg(&pdev->dev, "can't share IRQ %d?\n", AT91SAM3X_INT_RTT);
+		rtc_device_unregister(rtc->rtcdev);
+		goto fail;
+	}
+#else
 	/* register irq handler after we know what name we'll use */
 	ret = request_irq(AT91_ID_SYS, at91_rtc_interrupt,
 				IRQF_SHARED,
 				dev_name(&rtc->rtcdev->dev), rtc);
+
 	if (ret) {
 		dev_dbg(&pdev->dev, "can't share IRQ %d?\n", AT91_ID_SYS);
 		rtc_device_unregister(rtc->rtcdev);
 		goto fail_register;
 	}
-
+#endif
 	/* NOTE:  sam9260 rev A silicon has a ROM bug which resets the
 	 * RTT on at least some reboots.  If you have that chip, you must
 	 * initialize the time from some external source like a GPS, wall
@@ -386,7 +397,12 @@ static int __devexit at91_rtc_remove(struct platform_device *pdev)
 
 	/* disable all interrupts */
 	rtt_writel(rtc, MR, mr & ~(AT91_RTT_ALMIEN | AT91_RTT_RTTINCIEN));
+#if defined(CONFIG_ARCH_AT91SAM3X8H)
+	free_irq(AT91SAM3X_INT_RTT, rtc);
+#else
 	free_irq(AT91_ID_SYS, rtc);
+#endif
+
 
 	rtc_device_unregister(rtc->rtcdev);
 

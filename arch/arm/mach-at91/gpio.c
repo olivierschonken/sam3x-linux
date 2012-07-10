@@ -73,6 +73,7 @@ static struct at91_gpio_chip gpio_chip[] = {
 	AT91_GPIO_CHIP("pioC", 32),
 	AT91_GPIO_CHIP("pioD", 32),
 	AT91_GPIO_CHIP("pioE", 32),
+	AT91_GPIO_CHIP("pioF", 32),
 };
 
 static int gpio_banks;
@@ -160,12 +161,13 @@ int __init_or_module at91_set_A_periph(unsigned pin, int use_pullup)
 {
 	void __iomem	*pio = pin_to_controller(pin);
 	unsigned	mask = pin_to_mask(pin);
-
+	unsigned    absreg = __raw_readl(pio + PIO_ABSR);
 	if (!pio)
 		return -EINVAL;
 
 	__raw_writel(mask, pio + PIO_IDR);
 	__raw_writel(mask, pio + (use_pullup ? PIO_PUER : PIO_PUDR));
+#if !defined(CONFIG_ARCH_AT91SAM3X8H)
 	if (has_pio3()) {
 		__raw_writel(__raw_readl(pio + PIO_ABCDSR1) & ~mask,
 							pio + PIO_ABCDSR1);
@@ -174,6 +176,9 @@ int __init_or_module at91_set_A_periph(unsigned pin, int use_pullup)
 	} else {
 		__raw_writel(mask, pio + PIO_ASR);
 	}
+#else
+	__raw_writel((absreg & ~mask), pio + PIO_ABSR);
+#endif
 	__raw_writel(mask, pio + PIO_PDR);
 	return 0;
 }
@@ -193,6 +198,7 @@ int __init_or_module at91_set_B_periph(unsigned pin, int use_pullup)
 
 	__raw_writel(mask, pio + PIO_IDR);
 	__raw_writel(mask, pio + (use_pullup ? PIO_PUER : PIO_PUDR));
+#if !defined(CONFIG_ARCH_AT91SAM3X8H)
 	if (has_pio3()) {
 		__raw_writel(__raw_readl(pio + PIO_ABCDSR1) | mask,
 							pio + PIO_ABCDSR1);
@@ -201,6 +207,9 @@ int __init_or_module at91_set_B_periph(unsigned pin, int use_pullup)
 	} else {
 		__raw_writel(mask, pio + PIO_BSR);
 	}
+#else
+	__raw_writel(mask, pio + PIO_ABSR);
+#endif
 	__raw_writel(mask, pio + PIO_PDR);
 	return 0;
 }
@@ -792,7 +801,6 @@ int __init at91_gpio_of_irq_setup(struct device_node *node,
 static void __init at91_gpio_irqdomain(struct at91_gpio_chip *at91_gpio)
 {
 	int irq_base;
-
 	irq_base = irq_alloc_descs(-1, 0, at91_gpio->chip.ngpio, 0);
 	if (irq_base < 0)
 		panic("at91_gpio.%d: error %d: couldn't allocate IRQ numbers.\n",
@@ -813,7 +821,6 @@ void __init at91_gpio_irq_setup(void)
 	unsigned		pioc;
 	int			gpio_irqnbr = 0;
 	struct at91_gpio_chip	*this, *prev;
-
 	/* Setup proper .irq_set_type function */
 	if (has_pio3())
 		gpio_irqchip.irq_set_type = alt_gpio_irq_type;
@@ -852,7 +859,6 @@ void __init at91_gpio_irq_setup(void)
 		 */
 		if (prev && prev->next == this)
 			continue;
-
 		this->pioc_virq = irq_create_mapping(NULL, this->pioc_hwirq);
 		irq_set_chip_data(this->pioc_virq, this);
 		irq_set_chained_handler(this->pioc_virq, gpio_irq_handler);

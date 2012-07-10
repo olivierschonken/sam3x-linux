@@ -29,7 +29,8 @@
 #include <linux/completion.h>
 
 #include <asm/uaccess.h>
-
+#include <mach/board.h>
+#include <mach/cpu.h>
 #include <mach/at91_rtc.h>
 
 #define at91_rtc_read(field) \

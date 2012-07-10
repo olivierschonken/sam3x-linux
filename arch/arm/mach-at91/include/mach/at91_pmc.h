@@ -50,6 +50,10 @@ extern void __iomem *at91_pmc_base;
 #define	AT91_PMC_PCDR		0x14			/* Peripheral Clock Disable Register */
 #define	AT91_PMC_PCSR		0x18			/* Peripheral Clock Status Register */
 
+#define	AT91_PMC_PCER1		0x100	/* Peripheral Clock Enable Register */
+#define	AT91_PMC_PCDR1		0x104	/* Peripheral Clock Disable Register */
+#define	AT91_PMC_PCSR1		0x108	/* Peripheral Clock Status Register */
+
 #define	AT91_CKGR_UCKR		0x1C			/* UTMI Clock Register [some SAM9] */
 #define		AT91_PMC_UPLLEN		(1   << 16)		/* UTMI PLL Enable */
 #define		AT91_PMC_UPLLCOUNT	(0xf << 20)		/* UTMI PLL Start-up Time */

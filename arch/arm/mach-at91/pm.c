@@ -201,7 +201,7 @@ static int at91_pm_enter(suspend_state_t state)
 {
 	at91_gpio_suspend();
 	at91_irq_suspend();
-
+#if !defined(CONFIG_ARCH_AT91SAM3X8H)
 	pr_debug("AT91: PM - wake mask %08x, pm state %d\n",
 			/* remember all the always-wake irqs */
 			(at91_pmc_read(AT91_PMC_PCSR)
@@ -210,7 +210,7 @@ static int at91_pm_enter(suspend_state_t state)
 					| (at91_extern_irq))
 				& at91_aic_read(AT91_AIC_IMR),
 			state);
-
+#endif
 	switch (state) {
 		/*
 		 * Suspend-to-RAM is like STANDBY plus slow clock mode, so

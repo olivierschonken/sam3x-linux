@@ -16,7 +16,7 @@
 #include <linux/kernel.h>
 #include <asm/irq.h>
 
-#define MAX_GPIO_BANKS		5
+#define MAX_GPIO_BANKS		6
 #define NR_BUILTIN_GPIO		(MAX_GPIO_BANKS * 32)
 
 /* these pin numbers double as IRQ numbers, like AT91xxx_ID_* values */
@@ -185,6 +185,13 @@
 #define	AT91_PIN_PE29	(0x80 + 29)
 #define	AT91_PIN_PE30	(0x80 + 30)
 #define	AT91_PIN_PE31	(0x80 + 31)
+
+#define	AT91_PIN_PF0	(0xA0 + 0)
+#define	AT91_PIN_PF1	(0xA0 + 1)
+#define	AT91_PIN_PF2	(0xA0 + 2)
+#define	AT91_PIN_PF3	(0xA0 + 3)
+#define	AT91_PIN_PF4	(0xA0 + 4)
+#define	AT91_PIN_PF5	(0xA0 + 5)
 
 #ifndef __ASSEMBLY__
 /* setup setup routines, called from board init or driver probe() */

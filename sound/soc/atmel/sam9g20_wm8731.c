@@ -199,10 +199,10 @@ static struct platform_device *at91sam9g20ek_snd_device;
 
 static int __init at91sam9g20ek_init(void)
 {
-	struct clk *pllb;
+	struct clk *plla;
 	int ret;
 
-	if (!(machine_is_at91sam9g20ek() || machine_is_at91sam9g20ek_2mmc()))
+	if (!(machine_is_at91sam9g20ek() || machine_is_at91sam3x8hek()))
 		return -ENODEV;
 
 	ret = atmel_ssc_set_audio(0);
@@ -221,14 +221,14 @@ static int __init at91sam9g20ek_init(void)
 		goto err;
 	}
 
-	pllb = clk_get(NULL, "pllb");
-	if (IS_ERR(pllb)) {
+	plla = clk_get(NULL, "plla");
+	if (IS_ERR(plla)) {
 		printk(KERN_ERR "ASoC: Failed to get PLLB\n");
-		ret = PTR_ERR(pllb);
+		ret = PTR_ERR(plla);
 		goto err_mclk;
 	}
-	ret = clk_set_parent(mclk, pllb);
-	clk_put(pllb);
+	ret = clk_set_parent(mclk, plla);
+	clk_put(plla);
 	if (ret != 0) {
 		printk(KERN_ERR "ASoC: Failed to set MCLK parent\n");
 		goto err_mclk;

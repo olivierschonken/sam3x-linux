@@ -2,7 +2,11 @@
 # Makefile for the linux kernel.
 #
 
+ifeq ($(CONFIG_ARCH_AT91SAM3X8H),y)
+obj-y		:= gpio.o setup.o
+else
 obj-y		:= irq.o gpio.o setup.o
+endif
 obj-m		:=
 obj-n		:=
 obj-		:=
@@ -11,6 +15,7 @@ obj-$(CONFIG_AT91_PMC_UNIT)	+= clock.o
 obj-$(CONFIG_AT91_SAM9_ALT_RESET) += at91sam9_alt_reset.o
 obj-$(CONFIG_AT91_SAM9G45_RESET) += at91sam9g45_reset.o
 obj-$(CONFIG_SOC_AT91SAM9)	+= at91sam926x_time.o sam9_smc.o
+obj-$(CONFIG_SOC_AT91SAM3X)	+= timer.o  sam3_smc.o
 
 # CPU-specific support
 obj-$(CONFIG_SOC_AT91RM9200)	+= at91rm9200.o at91rm9200_time.o
@@ -21,6 +26,7 @@ obj-$(CONFIG_SOC_AT91SAM9G45)	+= at91sam9g45.o
 obj-$(CONFIG_SOC_AT91SAM9N12)	+= at91sam9n12.o
 obj-$(CONFIG_SOC_AT91SAM9X5)	+= at91sam9x5.o
 obj-$(CONFIG_SOC_AT91SAM9RL)	+= at91sam9rl.o
+obj-$(CONFIG_SOC_AT91SAM3X)     += at91sam3x8h.o 
 
 obj-$(CONFIG_ARCH_AT91RM9200)	+= at91rm9200_devices.o
 obj-$(CONFIG_ARCH_AT91SAM9260)	+= at91sam9260_devices.o
@@ -30,6 +36,7 @@ obj-$(CONFIG_ARCH_AT91SAM9263)	+= at91sam9263_devices.o
 obj-$(CONFIG_ARCH_AT91SAM9RL)	+= at91sam9rl_devices.o
 obj-$(CONFIG_ARCH_AT91SAM9G20)	+= at91sam9260_devices.o
 obj-$(CONFIG_ARCH_AT91SAM9G45)	+= at91sam9g45_devices.o
+obj-$(CONFIG_ARCH_AT91SAM3X8H) += at91sam3x8h_devices.o
 obj-$(CONFIG_ARCH_AT91X40)	+= at91x40.o at91x40_time.o
 
 # AT91RM9200 board-specific support
@@ -86,6 +93,9 @@ obj-$(CONFIG_MACH_SNAPPER_9260)	+= board-snapper9260.o
 
 # AT91SAM9G45 board-specific support
 obj-$(CONFIG_MACH_AT91SAM9M10G45EK) += board-sam9m10g45ek.o
+
+# AT91SAM9G45 board-specific support
+obj-$(CONFIG_MACH_AT91SAM3X8HEK) += board-sam3x8hek.o
 
 # AT91SAM board with device-tree
 obj-$(CONFIG_MACH_AT91SAM_DT) += board-dt.o

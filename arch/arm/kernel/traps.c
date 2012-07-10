@@ -36,7 +36,9 @@
 #include <asm/system_misc.h>
 
 #include "signal.h"
-
+#if defined(CONFIG_CPU_V7M)
+#include "traps-v7m.h"
+#endif
 static const char *handler[]= { "prefetch abort", "data abort", "address exception", "interrupt" };
 
 void *vectors_page;
@@ -792,6 +794,7 @@ static void __init kuser_get_tls_init(unsigned long vectors)
 
 void __init early_trap_init(void *vectors_base)
 {
+#ifndef CONFIG_CPU_V7M
 	unsigned long vectors = (unsigned long)vectors_base;
 	extern char __stubs_start[], __stubs_end[];
 	extern char __vectors_start[], __vectors_end[];
@@ -825,4 +828,7 @@ void __init early_trap_init(void *vectors_base)
 
 	flush_icache_range(vectors, vectors + PAGE_SIZE);
 	modify_domain(DOMAIN_USER, DOMAIN_CLIENT);
+#else /* CONFIG_CPU_V7M */
+	traps_v7m_init();
+#endif /* CONFIG_CPU_V7M */
 }

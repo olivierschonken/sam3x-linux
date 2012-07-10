@@ -3,6 +3,7 @@
 
 #include <linux/platform_device.h>
 #include <linux/list.h>
+#include <asm/io.h>
 
 struct ssc_device {
 	struct list_head	list;

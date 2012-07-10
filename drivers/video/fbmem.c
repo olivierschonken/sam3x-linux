@@ -31,6 +31,7 @@
 #include <linux/err.h>
 #include <linux/device.h>
 #include <linux/efi.h>
+#include <linux/backing-dev.h>
 #include <linux/fb.h>
 
 #include <asm/fb.h>
@@ -41,6 +42,10 @@
      */
 
 #define FBPIXMAPSIZE	(1024 * 8)
+
+static struct backing_dev_info fb_mappable_backing_dev = {
+       .capabilities = BDI_CAP_MAP_DIRECT | BDI_CAP_READ_MAP | BDI_CAP_WRITE_MAP,
+};
 
 static DEFINE_MUTEX(registration_lock);
 struct fb_info *registered_fb[FB_MAX] __read_mostly;
@@ -1449,6 +1454,10 @@ __releases(&info->lock)
 		res = info->fbops->fb_open(info,1);
 		if (res)
 			module_put(info->fbops->owner);
+		if (!res) {
+			file->f_mapping->backing_dev_info = &fb_mappable_backing_dev;
+		}
+
 	}
 #ifdef CONFIG_FB_DEFERRED_IO
 	if (info->fbdefio)
@@ -1466,7 +1475,20 @@ fb_release(struct inode *inode, struct file *file)
 __acquires(&info->lock)
 __releases(&info->lock)
 {
+	struct fb_info *fbinfo;
+	int fbidx = iminor(inode);
+	//early_printk("\n\nfb_get_unmapped_area\n\n");
+	//lock_kernel();
+	fbinfo = get_fb_info(fbidx);
+
 	struct fb_info * const info = file->private_data;
+	mutex_lock(&fbinfo->lock);
+	if (fbinfo->fbops->fb_write_flush)
+	{
+		fbinfo->fbops->fb_write_flush(fbinfo);
+		early_printk("\nframebuffer release flush\n");
+	}
+	mutex_unlock(&fbinfo->lock);
 
 	mutex_lock(&info->lock);
 	if (info->fbops->fb_release)
@@ -1476,6 +1498,33 @@ __releases(&info->lock)
 	put_fb_info(info);
 	return 0;
 }
+
+static unsigned long fb_get_unmapped_area(struct file *file, unsigned long addr,
+				unsigned long len, unsigned long pgoff, unsigned long flags)
+{
+	unsigned long ret = -ENOSYS;
+	int fbidx = iminor(file->f_dentry->d_inode);
+	struct fb_info *info;
+	//early_printk("\n\nfb_get_unmapped_area\n\n");
+	//lock_kernel();
+	info = registered_fb[fbidx];
+	mutex_lock(&info->mm_lock);
+	if (info->fbops->fb_get_unmapped_area)
+	{
+		ret = info->fbops->fb_get_unmapped_area(info, file, addr, len, pgoff, flags);
+		early_printk("\n\fb_get_unmapped_area ret: %8x\n\n", ret);
+	}
+#ifndef CONFIG_MMU
+//	else if (info->fix.smem_start)
+	//	ret = info->fix.smem_start;
+	ret = info->screen_base;
+	early_printk("\n\nScreen Base %8x\n\n", info->screen_base);
+#endif
+	mutex_unlock(&info->mm_lock);
+	//unlock_kernel();
+	return ret;
+}
+
 
 static const struct file_operations fb_fops = {
 	.owner =	THIS_MODULE,
@@ -1490,6 +1539,8 @@ static const struct file_operations fb_fops = {
 	.release =	fb_release,
 #ifdef HAVE_ARCH_FB_UNMAPPED_AREA
 	.get_unmapped_area = get_fb_unmapped_area,
+#else
+	.get_unmapped_area = fb_get_unmapped_area,
 #endif
 #ifdef CONFIG_FB_DEFERRED_IO
 	.fsync =	fb_deferred_io_fsync,

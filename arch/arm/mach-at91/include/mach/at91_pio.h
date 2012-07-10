@@ -43,7 +43,11 @@
 #define PIO_ABCDSR1	0x70	/* Peripheral ABCD Select Register 1 [some sam9 only] */
 #define PIO_BSR		0x74	/* Peripheral B Select Register */
 #define PIO_ABCDSR2	0x74	/* Peripheral ABCD Select Register 2 [some sam9 only] */
-#define PIO_ABSR	0x78	/* AB Status Register */
+#if !defined(CONFIG_ARCH_AT91SAM3X8H)
+	#define PIO_ABSR	0x70	/* AB Status Register */
+#else
+	#define PIO_ABSR	0x78	/* AB Status Register */
+#endif
 #define PIO_IFSCDR	0x80	/* Input Filter Slow Clock Disable Register */
 #define PIO_IFSCER	0x84	/* Input Filter Slow Clock Enable Register */
 #define PIO_IFSCSR	0x88	/* Input Filter Slow Clock Status Register */

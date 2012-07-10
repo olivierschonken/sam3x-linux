@@ -1185,6 +1185,9 @@ static void atc_free_chan_resources(struct dma_chan *chan)
 static struct at_dma_platform_data at91sam9rl_config = {
 	.nr_channels = 2,
 };
+static struct at_dma_platform_data at91sam3x_config = {
+	.nr_channels = 6,
+};
 static struct at_dma_platform_data at91sam9g45_config = {
 	.nr_channels = 8,
 };
@@ -1213,6 +1216,9 @@ static const struct platform_device_id atdma_devtypes[] = {
 		.name = "at91sam9g45_dma",
 		.driver_data = (unsigned long) &at91sam9g45_config,
 	}, {
+		.name = "at91sam3x_dma",
+		.driver_data = (unsigned long) &at91sam3x_config,
+	},{
 		/* sentinel */
 	}
 };
@@ -1259,6 +1265,8 @@ static int __init at_dma_probe(struct platform_device *pdev)
 
 	/* setup platform data for each SoC */
 	dma_cap_set(DMA_MEMCPY, at91sam9rl_config.cap_mask);
+	dma_cap_set(DMA_SLAVE, at91sam3x_config.cap_mask);
+	dma_cap_set(DMA_MEMCPY, at91sam3x_config.cap_mask);
 	dma_cap_set(DMA_MEMCPY, at91sam9g45_config.cap_mask);
 	dma_cap_set(DMA_SLAVE, at91sam9g45_config.cap_mask);
 
