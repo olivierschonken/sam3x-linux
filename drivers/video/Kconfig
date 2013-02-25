@@ -1014,9 +1014,11 @@ config FB_ATMEL
 config FB_HX8347
 	tristate "HX8347 LCD Controller support"
 	depends on FB
-	select FB_CFB_FILLRECT
-	select FB_CFB_COPYAREA
-	select FB_CFB_IMAGEBLIT
+	select FB_SYS_FILLRECT
+	select FB_SYS_COPYAREA
+	select FB_SYS_IMAGEBLIT
+	select FB_SYS_FOPS
+        select FB_DEFERRED_IO
 	help
 	  This enables support for the HX8347 LCD Controller.
 

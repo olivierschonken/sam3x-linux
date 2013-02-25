@@ -1,4 +1,5 @@
 #include <linux/module.h>
+#include <linux/kernel.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>
 #include <linux/fb.h>
@@ -10,6 +11,7 @@
 #include <linux/vmalloc.h>
 #include <linux/platform_device.h>
 #include <video/hx8347_fb.h>
+#include <linux/list.h>
 #include <asm/uaccess.h>
 #include <asm/errno.h>
 #include <mach/gpio.h>
@@ -348,7 +350,7 @@ static void hx8347_fb_fillrect(struct fb_info *info, const struct fb_fillrect *r
 {
 	struct hx8347_draw_parms pd;
 
-	cfb_fillrect(info, rect);
+	sys_fillrect(info, rect);
 
 	if ((rect->dx > SCREEN_WIDTH) || (rect->dy > SCREEN_HEIGHT)
 		|| ((rect->dx + rect->width) > SCREEN_WIDTH)
@@ -377,7 +379,7 @@ static void hx8347_fb_imageblit(struct fb_info *info, const struct fb_image *ima
 {
 	struct hx8347_draw_parms pd;
 
-	cfb_imageblit(info, image);
+	sys_imageblit(info, image);
 
 	if ((image->dx > SCREEN_WIDTH) || (image->dy > SCREEN_HEIGHT)
 		|| ((image->dx + image->width) > SCREEN_WIDTH)
@@ -406,7 +408,7 @@ static void hx8347_fb_copyarea(struct fb_info *info, const struct fb_copyarea *a
 {
 	struct hx8347_draw_parms pd;
 
-	cfb_copyarea(info, area);
+	sys_copyarea(info, area);
 
 	if ((area->dx > SCREEN_WIDTH) || (area->dy > SCREEN_HEIGHT)
 		|| ((area->dx + area->width) > SCREEN_WIDTH)
@@ -437,6 +439,27 @@ static void hx8347_fb_copyarea(struct fb_info *info, const struct fb_copyarea *a
 static ssize_t hx8347_fb_read(struct fb_info *info, char *buf, size_t count, loff_t *ppos)
 {
 	return 0;
+}
+
+static void hx8347_fb_dpy_update(struct fb_info *info)
+{
+	int i;
+        struct hx8347_draw_parms pd;
+	pd.op = HX8347_OP_PIXELS;
+	pd.xs = 0;
+	pd.ys = 0;
+	pd.xe = SCREEN_WIDTH;
+	pd.ye = SCREEN_HEIGHT;
+	pd.buf = (u16*)info->screen_base;
+
+	hx8347_write_array(info, &pd);
+}
+
+/* this is called back from the deferred io workqueue */
+static void hx8347_fb_dpy_deferred_io(struct fb_info *info,
+				struct list_head *pagelist)
+{
+	hx8347_fb_dpy_update(info);
 }
 
 /**
@@ -727,7 +750,7 @@ static struct fb_ops hx8347_fb_ops =
 {
 	.owner			= THIS_MODULE,
 	.fb_open		= hx8347_fb_open,
-	.fb_read		= hx8347_fb_read,
+	.fb_read		= fb_sys_read, //hx8347_fb_read,
 	.fb_write		= hx8347_fb_write,
 	.fb_release		= hx8347_fb_release,
 	.fb_ioctl		= hx8347_fb_ioctl,
@@ -737,6 +760,11 @@ static struct fb_ops hx8347_fb_ops =
 	.fb_setcolreg	= hx8347_fb_setcolreg,
 	.fb_write_flush = hx8347_fb_flushwrite,
 //	.fb_mmap		= hx8347_fb_mmap,
+};
+
+static struct fb_deferred_io hx8347_fb_defio = {
+	.delay		= HZ,
+	.deferred_io	= hx8347_fb_dpy_deferred_io,
 };
 
 
@@ -759,7 +787,7 @@ static int __init hx8347_probe(struct platform_device *pdev)
 	fb_dev = NULL;
 
 	/* Allocate video RAM */
-	vmem = vmalloc(vsize);
+	vmem = vzalloc(vsize);
 	if (!vmem)
 		return -ENOMEM;
 
@@ -777,6 +805,9 @@ static int __init hx8347_probe(struct platform_device *pdev)
 	info->var   = hx8347_fb_var;
 	info->fix   = hx8347_fb_fix;
 	info->flags = FBINFO_FLAG_DEFAULT;
+
+	info->fbdefio = &hx8347_fb_defio;
+	fb_deferred_io_init(info);
 
 	fb_dev = info->par;
 	fb_dev->info = info;

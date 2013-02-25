@@ -16,7 +16,7 @@ dir /etc 0755 0 0
 # Last modified: 1211381152
 
 dir /bin 755 0 0
-file /bin/busybox /home/olivier/linux/busybox 755 0 0
+file /bin/busybox usr/busybox 755 0 0
 slink /bin/acpid busybox 777 0 0 
 slink /bin/base64 busybox 777 0 0 
 slink /bin/beep busybox 777 0 0 
