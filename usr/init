@@ -1,0 +1,73 @@
+#!/bin/hush
+################################################################################
+# This script is meant to be run as the "init" script of an initramfs, which
+# should be a writable filesystem (tmpfs or ramfs, tmpfs preferred).
+#
+# DO NOT ATTEMT TO RUN THIS IN AN INITRD (ramdisk) without modification
+#
+################################################################################
+
+PATH="/bin:/sbin:/usr/bin:/usr/sbin"
+
+# Path to directory to mount $ROOTDEV under in initrd
+NEWROOT="/newroot"
+
+# Commands used in this initrd script
+# Hardcode busybox to ensure availability of commands when /proc isn't
+# mounted or symlinks aren't made yet
+BBINSTALL="/bin/busybox --install -s"
+CAT="/bin/cat"
+CHMOD="/bin/chmod"
+MOUNT="/bin/mount"
+UMOUNT="/bin/umount"
+SHELL="/bin/hush"
+MKDIR="/bin/mkdir"
+GREP="/bin/grep"
+AWK="/usr/bin/awk"
+SWITCH="/sbin/switch_root"
+TR="/usr/bin/tr"
+# mdev (busybox symlinks should be usable when using this)
+MDEV="/sbin/mdev"
+
+# Kernel command-line (convenience variable)
+KCMD="/proc/cmdline"
+
+# Function for dropping to a shell
+shell () {
+        echo ''
+        echo '  Entering rescue shell.'
+        echo '  Type rootdev root_device to set device to boot.'
+        echo '     ex: rootdev /dev/sda1'
+        echo '  Exit shell to continue booting.'
+        exec $SHELL
+}
+
+
+
+# EXECUTION BEGINS HERE
+echo "Entering initramfs"
+
+# install all busybox symlinks before doing anything else
+# /proc still needs to be mounted before the symlinks will work
+echo "Creating busybox symlinks"
+$BBINSTALL
+
+
+# Ensure that basic directories exist
+for dir in /proc /sys /dev
+do
+        [ -d $dir ] || $MKDIR $dir
+done
+
+# Mount /proc, necessary for other mounts
+echo "Mounting proc, sys, tmp and dev"
+$MOUNT -t proc proc /proc
+# Mount /sys, necessary to create the device mapper control device
+$MOUNT -t sysfs sys /sys
+# Mount tmpfs on /dev and set up /dev/pts
+$MOUNT -t tmpfs tmp /tmp
+$MOUNT -t devtmpfs dev /dev
+
+echo "Going to shell"
+exec $SHELL
+ 

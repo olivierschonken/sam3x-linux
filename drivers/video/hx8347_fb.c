@@ -292,7 +292,7 @@ static int hx8347_write_array(struct fb_info *info, struct hx8347_draw_parms *pd
 	else {lineWidth = pd->xe - pd->xs + 1;  startwidth = pd->xs;}
 	if (pd->ys > pd->ye) {lines = pd->ys - pd->ye + 1; startline = pd->ye;}
 	else {lines = pd->ye - pd->ys + 1; startline = pd->ys;}
-	early_printk("len %d x0 %d x1 %d y0 %d y1 %d\n",len, pd->xs, pd->xe, pd->ys, pd->ye);
+	//early_printk("len %d x0 %d x1 %d y0 %d y1 %d\n",len, pd->xs, pd->xe, pd->ys, pd->ye);
     /* Prepare to write in GRAM */
     hx8347_write_cmd(hx8347, HX8347_R22H ) ;
     //early_printk("x-start %d   x-stop %d  y-start %d   y-stop %d\n", pd->xs, pd->xe , pd->ys, pd->ye);
@@ -301,11 +301,11 @@ static int hx8347_write_array(struct fb_info *info, struct hx8347_draw_parms *pd
 	    for (j = 0; j < lines; j++)
 	    {
 		bufpos = (startline++ * (SCREEN_WIDTH + 1)) + startwidth;
-			for (i = 0; i < lineWidth; i++)
-			{
-				actuallen++;
-				hx8347_write_dat(hx8347, pd->buf[bufpos++]);
-			}
+		for (i = 0; i < lineWidth; i++)
+		{
+			actuallen++;
+			hx8347_write_dat(hx8347, pd->buf[bufpos++]);
+		}
 	    }
 	    //early_printk("len %d actual len %d", len, actuallen);
 	}
