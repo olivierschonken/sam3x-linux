@@ -164,6 +164,11 @@ static void __init soc_detect(u32 dbgu_base)
 		at91_boot_soc = at91sam9n12_soc;
 		break;
 
+	case ARCH_ID_AT91SAM3X8_ES:
+		at91_soc_initdata.type = AT91_SOC_SAM3X8H;
+		at91_boot_soc = at91sam3x8h_soc;
+		break;
+
 	case ARCH_ID_AT91SAM3X8:
 		at91_soc_initdata.type = AT91_SOC_SAM3X8H;
 		at91_boot_soc = at91sam3x8h_soc;
