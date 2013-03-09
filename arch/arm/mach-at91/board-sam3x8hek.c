@@ -299,6 +299,13 @@ static struct gpio_led ek_leds[] = {
 			.active_low		= 1,
 			.default_trigger	= "mmc0",
 		},
+#if 0
+		{	/* "right" led, green, userled1, pwm1 */
+			.name			= "backlight",
+			.gpio			= AT91_PIN_PB27,
+			.active_low		= 0,
+		},
+#endif
 };
 
 /* OLED */
@@ -325,6 +332,8 @@ static struct i2c_board_info __initdata ek_i2c_devices[] = {
 static void __init ek_board_init(void)
 {
 	/* Serial */
+	at91_set_gpio_output(AT91_PIN_PE14, 0); /*Enable USART 1*/
+	at91_register_uart(AT91SAM3X_US0_ID,1,0);
 	at91_add_device_serial();
 	/* USB HS Device TODO: Change to OTG*/
 	//at91_add_device_usba(&ek_usba_udc_data);

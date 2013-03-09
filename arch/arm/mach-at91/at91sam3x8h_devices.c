@@ -27,6 +27,7 @@
 #include <linux/dma-mapping.h>
 #include <linux/gpio.h>
 #include <linux/clk.h>
+#include <linux/delay.h>
 #include <linux/platform_device.h>
 #include <linux/i2c-gpio.h>
 #include <linux/atmel-mci.h>
@@ -41,6 +42,7 @@
 #include <mach/at91sam3_smc.h>
 #include <mach/at_hdmac.h>
 #include <mach/atmel-mci.h>
+#include <mach/at91_rstc.h>
 
 #include "generic.h"
 #include "clock.h"
@@ -172,6 +174,8 @@ static struct platform_device at91sam3x8h_eth_device = {
 
 void __init at91_add_device_eth(struct macb_platform_data *data)
 {
+	uint8_t mac_addr[] = { 0x00, 0x12, 0x22, 0x32, 0x44, 0x55 };
+
 	if (!data)
 		return;
 
@@ -181,6 +185,10 @@ void __init at91_add_device_eth(struct macb_platform_data *data)
 	}
 
 	at91_set_gpio_output(AT91_PIN_PD17, 1);
+
+	at91_rstc_write(AT91_RSTC_CR, AT91_RSTC_KEY | AT91_RSTC_EXTRST );
+	mdelay(10);
+
 	/* Pins used for MII and RMII */
 	at91_set_A_periph(AT91_PIN_PB0, 0);	/* ETXCK_EREFCK */
 	at91_set_A_periph(AT91_PIN_PB4, 0);	/* ERXDV */
@@ -192,6 +200,14 @@ void __init at91_add_device_eth(struct macb_platform_data *data)
 	at91_set_A_periph(AT91_PIN_PB3, 0);	/* ETX1 */
 	at91_set_A_periph(AT91_PIN_PB9, 0);	/* EMDIO */
 	at91_set_A_periph(AT91_PIN_PB8, 0);	/* EMDC */
+
+	//__raw_writel((mac_addr[3] << 24) | (mac_addr[2] << 16) |
+	//			(mac_addr[1] << 8) | mac_addr[0], AT91SAM3X_BASE_EMAC + 0x98 );
+	//__raw_writel((mac_addr[5] << 8) | mac_addr[4], AT91SAM3X_BASE_EMAC + 0xA8 );
+	// Set local MAC address.
+//	EMAC_SA1L = (mac_addr[3] << 24) | (mac_addr[2] << 16) |
+//				(mac_addr[1] << 8) | mac_addr[0];
+//	EMAC_SA1H = (mac_addr[5] << 8) | mac_addr[4];
 
 	eth_data = *data;
 	platform_device_register(&at91sam3x8h_eth_device);
@@ -687,8 +703,18 @@ static struct resource tcb1_resources[] = {
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
-		.start	= AT91SAM3X_TC1_ID,
-		.end	= AT91SAM3X_TC1_ID,
+		.start	= AT91SAM3X_TC3_ID,
+		.end	= AT91SAM3X_TC3_ID,
+		.flags	= IORESOURCE_IRQ,
+	},
+	[2] = {
+		.start	= AT91SAM3X_TC4_ID,
+		.end	= AT91SAM3X_TC4_ID,
+		.flags	= IORESOURCE_IRQ,
+	},
+	[3] = {
+		.start	= AT91SAM3X_TC5_ID,
+		.end	= AT91SAM3X_TC5_ID,
 		.flags	= IORESOURCE_IRQ,
 	},
 };
@@ -697,21 +723,31 @@ static struct platform_device at91sam3x8h_tcb1_device = {
 	.name		= "atmel_tcb",
 	.id		= 0,
 	.resource	= tcb1_resources,
-	.num_resources	= ARRAY_SIZE(tcb0_resources),
+	.num_resources	= ARRAY_SIZE(tcb1_resources),
 };
 
 /* TCB1 begins with TC3 */
 static struct resource tcb2_resources[] = {
-	[0] = {
-		.start	= AT91SAM3X_BASE_TC2,
-		.end	= AT91SAM3X_BASE_TC2 + SZ_256 - 1,
-		.flags	= IORESOURCE_MEM,
-	},
-	[1] = {
-		.start	= AT91SAM3X_TC2_ID,
-		.end	= AT91SAM3X_TC2_ID,
-		.flags	= IORESOURCE_IRQ,
-	},
+		[0] = {
+			.start	= AT91SAM3X_BASE_TC2,
+			.end	= AT91SAM3X_BASE_TC2 + SZ_256 - 1,
+			.flags	= IORESOURCE_MEM,
+		},
+		[1] = {
+			.start	= AT91SAM3X_TC6_ID,
+			.end	= AT91SAM3X_TC6_ID,
+			.flags	= IORESOURCE_IRQ,
+		},
+		[2] = {
+			.start	= AT91SAM3X_TC7_ID,
+			.end	= AT91SAM3X_TC7_ID,
+			.flags	= IORESOURCE_IRQ,
+		},
+		[3] = {
+			.start	= AT91SAM3X_TC8_ID,
+			.end	= AT91SAM3X_TC8_ID,
+			.flags	= IORESOURCE_IRQ,
+		},
 };
 
 static struct platform_device at91sam3x8h_tcb2_device = {
@@ -988,8 +1024,8 @@ void __init at91_add_device_ssc(unsigned id, unsigned pins) {}
 #if defined(CONFIG_SERIAL_ATMEL)
 static struct resource dbgu_resources[] = {
 	[0] = {
-		.start	= AT91_DBGU,
-		.end	= AT91_DBGU + SZ_512 - 1,
+		.start	= AT91SAM3X_BASE_UART0,
+		.end	= AT91SAM3X_BASE_UART0 + 0x140 - 1,
 		.flags	= IORESOURCE_MEM,
 	},
 	[1] = {
@@ -1000,9 +1036,9 @@ static struct resource dbgu_resources[] = {
 };
 
 static struct atmel_uart_data dbgu_data = {
-	.use_dma_tx	= 0,
+	.use_dma_tx	= 1,
 	.use_dma_rx	= 0,
-	.regs		= (void __iomem *)(AT91_DBGU),
+	//.regs		= (void __iomem *)(AT91_DBGU),
 };
 
 static u64 dbgu_dmamask = DMA_BIT_MASK(32);
@@ -1021,8 +1057,8 @@ static struct platform_device at91sam3x8h_dbgu_device = {
 
 static inline void configure_dbgu_pins(void)
 {
-	//at91_set_A_periph(AT91_PIN_PB12, 0);		/* DRXD */
-	//at91_set_A_periph(AT91_PIN_PB13, 1);		/* DTXD */
+	at91_set_A_periph(AT91_PIN_PA8, 0);		/* DRXD */
+	at91_set_A_periph(AT91_PIN_PA9, 0);		/* DTXD */
 }
 
 static struct resource uart0_resources[] = {
@@ -1039,8 +1075,8 @@ static struct resource uart0_resources[] = {
 };
 
 static struct atmel_uart_data uart0_data = {
-	.use_dma_tx	= 1,
-	.use_dma_rx	= 1,
+	.use_dma_tx	= 0,
+	.use_dma_rx	= 0,
 };
 
 static u64 uart0_dmamask = DMA_BIT_MASK(32);
@@ -1059,13 +1095,13 @@ static struct platform_device at91sam3x8h_uart0_device = {
 
 static inline void configure_usart0_pins(unsigned pins)
 {
-	at91_set_A_periph(AT91_PIN_PB19, 1);		/* TXD0 */
-	at91_set_A_periph(AT91_PIN_PB18, 0);		/* RXD0 */
+	at91_set_A_periph(AT91_PIN_PA10, 0);		/* TXD0 */
+	at91_set_A_periph(AT91_PIN_PA11, 0);		/* RXD0 */
 
 	if (pins & ATMEL_UART_RTS)
-		at91_set_B_periph(AT91_PIN_PB17, 0);	/* RTS0 */
+		at91_set_A_periph(AT91_PIN_PB25, 0);	/* RTS0 */
 	if (pins & ATMEL_UART_CTS)
-		at91_set_B_periph(AT91_PIN_PB15, 0);	/* CTS0 */
+		at91_set_A_periph(AT91_PIN_PB26, 0);	/* CTS0 */
 }
 
 static struct resource uart1_resources[] = {

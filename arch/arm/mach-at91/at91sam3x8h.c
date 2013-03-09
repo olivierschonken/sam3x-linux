@@ -291,12 +291,20 @@ static struct clk_lookup periph_clocks_lookups[] = {
 	CLKDEV_CON_DEV_ID("spi_clk", "atmel_spi.1", &spi1_clk),
 	CLKDEV_CON_DEV_ID("pclk", "ssc.0", &ssc_clk),
 	CLKDEV_CON_DEV_ID(NULL, "atmel-trng", &trng_clk),
+	CLKDEV_CON_DEV_ID("t0_clk", "atmel_tcb.0", &tc3_clk),
+	CLKDEV_CON_DEV_ID("t1_clk", "atmel_tcb.0", &tc4_clk),
+	CLKDEV_CON_DEV_ID("t2_clk", "atmel_tcb.0", &tc5_clk),
+	CLKDEV_CON_DEV_ID("t0_clk", "atmel_tcb.1", &tc6_clk),
+	CLKDEV_CON_DEV_ID("t1_clk", "atmel_tcb.1", &tc7_clk),
+	CLKDEV_CON_DEV_ID("t2_clk", "atmel_tcb.1", &tc8_clk),
 	/* more usart lookup table for DT entries */
 	CLKDEV_CON_DEV_ID("usart", "400e0800.serial", &mck),
 	CLKDEV_CON_DEV_ID("usart", "40098000.serial", &usart0_clk),
 	CLKDEV_CON_DEV_ID("usart", "4009C000.serial", &usart1_clk),
 	CLKDEV_CON_DEV_ID("usart", "400A0000.serial", &usart2_clk),
 	CLKDEV_CON_DEV_ID("usart", "400A4000.serial", &usart3_clk),
+	//CLKDEV_CON_DEV_ID("t0_clk", "40084000.timer", &tc1_clk),
+	//CLKDEV_CON_DEV_ID("t0_clk", "40088000.timer", &tc2_clk),
 	CLKDEV_CON_ID("pioA", &pioA_clk),
 	CLKDEV_CON_ID("pioB", &pioB_clk),
 	CLKDEV_CON_ID("pioC", &pioC_clk),
@@ -397,6 +405,8 @@ static void __init at91sam3x8h_map_io(void)
 static void __init at91sam3x8h_ioremap_registers(void)
 {
 	at91sam3_ioremap_smc(0, AT91SAM3X_BASE_SMC);
+	at91_ioremap_shdwc(AT91SAM3X_BASE_SUPC);
+	at91_ioremap_rstc(AT91SAM3X_BASE_RSTC);
 }
 
 static void __init at91sam3x8h_initialize(void)

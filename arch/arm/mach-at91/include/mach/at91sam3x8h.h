@@ -148,8 +148,8 @@
 #define AT91SAM3X_BASE_USART3     0x400A4000 /*  (USART3    ) Base Address */
 #define AT91SAM3X_BASE_UOTGHS     0x400AC000 /*  (UOTGHS    ) Base Address */
 #define AT91SAM3X_BASE_EMAC       0x400B0000 /*  (EMAC      ) Base Address */
-#define AT91SAM3X_BASE_CAN0       0x400B0000 /*  (CAN0      ) Base Address */
-#define AT91SAM3X_BASE_CAN1       0x400B0000 /*  (CAN1      ) Base Address */
+#define AT91SAM3X_BASE_CAN0       0x400B4000 /*  (CAN0      ) Base Address */
+#define AT91SAM3X_BASE_CAN1       0x400B8000 /*  (CAN1      ) Base Address */
 #define AT91SAM3X_BASE_TRNG       0x400BC000 /*  (TRNG      ) Base Address */
 #define AT91SAM3X_BASE_ADC        0x400C0000 /*  (ADC       ) Base Address */
 #define AT91SAM3X_BASE_PDC_ADC    0x400C0100 /*  (PDC_ADC   ) Base Address */
@@ -165,7 +165,7 @@
 #define AT91SAM3X_BASE_MATRIX     0x400E0400 /*  (MATRIX    ) Base Address */
 #define AT91SAM3X_BASE_PMC        0x400E0600 /*  (PMC       ) Base Address */
 #define AT91SAM3X_BASE_UART0      0x400E0800 /*  (UART0     ) Base Address */
-#define AT91SAM3X_BASE_PDC_UART0  0x400E0800 /*  (PDC_UART0 ) Base Address */
+#define AT91SAM3X_BASE_PDC_UART0  0x400E0900 /*  (PDC_UART0 ) Base Address */
 #define AT91SAM3X_BASE_CHIPID     0x400E0940 /*  (CHIPID    ) Base Address */
 #define AT91SAM3X_BASE_EEFC0      0x400E0A00 /*  (EEFC0     ) Base Address */
 #define AT91SAM3X_BASE_EEFC1      0x400E0C00 /*  (EEFC1     ) Base Address */

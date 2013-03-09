@@ -47,7 +47,7 @@ static void nvic_ack_irq(struct irq_data *d)
 	u32 mask = 1 << (d->irq % 32);
 
 	raw_spin_lock(&irq_controller_lock);
-	writel(mask, NVIC_CLEAR_ENABLE + d->irq / 32 * 4);
+	writel(mask, NVIC_CLEAR_ENABLE + ((d->irq / 32) * 4));
 	raw_spin_unlock(&irq_controller_lock);
 }
 
@@ -56,7 +56,7 @@ static void nvic_mask_irq(struct irq_data *d)
 	u32 mask = 1 << (d->irq % 32);
 
 	raw_spin_lock(&irq_controller_lock);
-	writel(mask, NVIC_CLEAR_ENABLE + d->irq / 32 * 4);
+	writel(mask, NVIC_CLEAR_ENABLE + ((d->irq / 32) * 4));
 	raw_spin_unlock(&irq_controller_lock);
 }
 
@@ -65,7 +65,7 @@ static void nvic_unmask_irq(struct irq_data *d)
 	u32 mask = 1 << (d->irq % 32);
 
 	raw_spin_lock(&irq_controller_lock);
-	writel(mask, NVIC_SET_ENABLE + d->irq / 32 * 4);
+	writel(mask, NVIC_SET_ENABLE + ((d->irq / 32) * 4));
 	raw_spin_unlock(&irq_controller_lock);
 }
 
@@ -86,14 +86,14 @@ void __init nvic_init(void)
 	/*
 	 * Disable all interrupts
 	 */
-	for (i = 0; i < max_irq / 32; i++)
-		writel(~0, NVIC_CLEAR_ENABLE + i * 4);
+	for (i = 0; i < (max_irq / 32); i++)
+		writel(~0, NVIC_CLEAR_ENABLE + (i * 4));
 
 	/*
 	 * Set priority on all interrupts.
 	 */
-	for (i = 0; i < max_irq; i += 4)
-		writel(0, NVIC_PRIORITY + i);
+	for (i = 0; i < 8; i++)
+		writel(0, NVIC_PRIORITY + (i * 4));
 
 	/* Add irq domain for NVIC */
 	irq_base = irq_alloc_descs(-1, 0, max_irq, 0);
